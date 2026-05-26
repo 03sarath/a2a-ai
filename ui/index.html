@@ -466,11 +466,20 @@
     document.getElementById('spinnerText').textContent = 'Connecting to host agent...';
     document.getElementById('analyzeBtn').disabled = true;
 
-    const sessionId = 'session_' + Date.now();
-    const userId    = 'ui_user';
+    const userId = 'ui_user';
+
+    // Create session first, get back the real session ID
+    const sessionRes = await fetch(`${hostUrl}/apps/host/users/${userId}/sessions`, {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    '{}',
+    });
+    if (!sessionRes.ok) throw new Error(`Failed to create session: ${sessionRes.status}`);
+    const session = await sessionRes.json();
+    const sessionId = session.id;
 
     const body = JSON.stringify({
-      app_name:    'competitive_intel_host',
+      app_name:    'host',
       user_id:     userId,
       session_id:  sessionId,
       new_message: {
@@ -512,6 +521,8 @@
 
           let event;
           try { event = JSON.parse(raw); } catch { continue; }
+
+          console.log('SSE event:', JSON.stringify(event));
 
           // Update pipeline step based on author
           if (event.author) {

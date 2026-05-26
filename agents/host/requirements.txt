@@ -1,6 +1,6 @@
-google-adk==1.9.0
+google-adk[a2a]==1.9.0
 google-genai
-a2a-sdk==0.3.0
+a2a-sdk==0.2.16
 uvicorn
 psycopg2-binary
 sqlalchemy
