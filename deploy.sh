@@ -63,13 +63,18 @@ deploy_specialist() {
     --project="$GCP_PROJECT" \
     --region="$GCP_REGION" \
     --service_name="$SERVICE" \
-    "$AGENT_PATH" \
-    -- --allow-unauthenticated
+    "$AGENT_PATH"
 
   $GCLOUD run services update "$SERVICE" \
     --region="$GCP_REGION" \
     --update-secrets="GOOGLE_API_KEY=GOOGLE_API_KEY:latest" \
     --set-env-vars="GOOGLE_GENAI_USE_VERTEXAI=FALSE"
+
+  # Allow unauthenticated access (public endpoint for learning/demo)
+  $GCLOUD run services add-iam-policy-binding "$SERVICE" \
+    --region="$GCP_REGION" \
+    --member="allUsers" \
+    --role="roles/run.invoker"
 
   $GCLOUD run services describe "$SERVICE" \
     --region="$GCP_REGION" \
@@ -93,8 +98,7 @@ $ADK deploy cloud_run \
   --project="$GCP_PROJECT" \
   --region="$GCP_REGION" \
   --service_name="competitive-intel-host" \
-  ./agents/host \
-  -- --allow-unauthenticated
+  ./agents/host
 
 $GCLOUD run services update competitive-intel-host \
   --region="$GCP_REGION" \
@@ -106,6 +110,11 @@ MARKET_SCANNER_URL=$MARKET_SCANNER_URL,\
 SENTIMENT_ANALYZER_URL=$SENTIMENT_ANALYZER_URL,\
 PRICING_INTEL_URL=$PRICING_INTEL_URL,\
 REPORT_GENERATOR_URL=$REPORT_GENERATOR_URL"
+
+$GCLOUD run services add-iam-policy-binding competitive-intel-host \
+  --region="$GCP_REGION" \
+  --member="allUsers" \
+  --role="roles/run.invoker"
 
 HOST_URL=$($GCLOUD run services describe competitive-intel-host \
   --region="$GCP_REGION" --format="value(status.url)")
