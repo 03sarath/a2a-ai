@@ -25,8 +25,8 @@ $GCLOUD services enable \
   secretmanager.googleapis.com \
   --project="$GCP_PROJECT"
 
-# ── Step 2: Store API key in Secret Manager ───────────────────────────────────
-echo "[2/7] Storing API key in Secret Manager..."
+# ── Step 2: Store secrets in Secret Manager ──────────────────────────────────
+echo "[2/7] Storing secrets in Secret Manager..."
 echo "$GOOGLE_API_KEY" | $GCLOUD secrets create GOOGLE_API_KEY \
   --project="$GCP_PROJECT" \
   --data-file=- 2>/dev/null || \
@@ -34,12 +34,24 @@ echo "$GOOGLE_API_KEY" | $GCLOUD secrets versions add GOOGLE_API_KEY \
   --project="$GCP_PROJECT" \
   --data-file=-
 
-# ── Step 3: Grant Cloud Run permission to read the secret ─────────────────────
+echo "$DATABASE_URL" | $GCLOUD secrets create SESSION_SERVICE_URI \
+  --project="$GCP_PROJECT" \
+  --data-file=- 2>/dev/null || \
+echo "$DATABASE_URL" | $GCLOUD secrets versions add SESSION_SERVICE_URI \
+  --project="$GCP_PROJECT" \
+  --data-file=-
+
+# ── Step 3: Grant Cloud Run permission to read the secrets ───────────────────
 echo "[3/7] Granting Cloud Run access to Secret Manager..."
 PROJECT_NUMBER=$($GCLOUD projects describe "$GCP_PROJECT" --format="value(projectNumber)")
+SA="serviceAccount:$PROJECT_NUMBER-compute@developer.gserviceaccount.com"
 $GCLOUD secrets add-iam-policy-binding GOOGLE_API_KEY \
   --project="$GCP_PROJECT" \
-  --member="serviceAccount:$PROJECT_NUMBER-compute@developer.gserviceaccount.com" \
+  --member="$SA" \
+  --role="roles/secretmanager.secretAccessor"
+$GCLOUD secrets add-iam-policy-binding SESSION_SERVICE_URI \
+  --project="$GCP_PROJECT" \
+  --member="$SA" \
   --role="roles/secretmanager.secretAccessor"
 
 # ── Step 4: Helper function — deploy one specialist agent ─────────────────────
@@ -95,14 +107,8 @@ $GCLOUD run deploy competitive-intel-host \
   --region="$GCP_REGION" \
   --project="$GCP_PROJECT" \
   --allow-unauthenticated \
-  --update-secrets="GOOGLE_API_KEY=GOOGLE_API_KEY:latest" \
-  --set-env-vars="\
-GOOGLE_GENAI_USE_VERTEXAI=FALSE,\
-SESSION_SERVICE_URI=$DATABASE_URL,\
-MARKET_SCANNER_URL=$MARKET_SCANNER_URL,\
-SENTIMENT_ANALYZER_URL=$SENTIMENT_ANALYZER_URL,\
-PRICING_INTEL_URL=$PRICING_INTEL_URL,\
-REPORT_GENERATOR_URL=$REPORT_GENERATOR_URL"
+  --update-secrets="GOOGLE_API_KEY=GOOGLE_API_KEY:latest,SESSION_SERVICE_URI=SESSION_SERVICE_URI:latest" \
+  --set-env-vars="GOOGLE_GENAI_USE_VERTEXAI=FALSE,MARKET_SCANNER_URL=$MARKET_SCANNER_URL,SENTIMENT_ANALYZER_URL=$SENTIMENT_ANALYZER_URL,PRICING_INTEL_URL=$PRICING_INTEL_URL,REPORT_GENERATOR_URL=$REPORT_GENERATOR_URL"
 
 HOST_URL=$($GCLOUD run services describe competitive-intel-host \
   --region="$GCP_REGION" \
