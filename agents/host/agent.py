@@ -4,17 +4,10 @@ from google.adk.agents import SequentialAgent
 from google.adk.agents.remote_a2a_agent import RemoteA2aAgent
 from a2a.utils.constants import AGENT_CARD_WELL_KNOWN_PATH
 
-# Validate required env vars at startup — fail fast with a clear message
 _REQUIRED = ["MARKET_SCANNER_URL", "SENTIMENT_ANALYZER_URL", "PRICING_INTEL_URL", "REPORT_GENERATOR_URL"]
 _missing = [v for v in _REQUIRED if not os.environ.get(v)]
 if _missing:
     sys.exit(f"Missing required environment variables: {', '.join(_missing)}")
-
-# ── Remote specialist agents ──────────────────────────────────────────────────
-# Each URL points to a deployed Cloud Run service.
-# The host agent calls them over HTTPS using the A2A protocol.
-# Context (previous agent outputs) is accumulated here on the host and
-# forwarded automatically with each sequential call.
 
 remote_market_scanner = RemoteA2aAgent(
     name="scan_market",
@@ -40,13 +33,9 @@ remote_report_generator = RemoteA2aAgent(
     agent_card=f"{os.environ['REPORT_GENERATOR_URL']}{AGENT_CARD_WELL_KNOWN_PATH}",
 )
 
-# ── Host agent (orchestrator) ─────────────────────────────────────────────────
-# SequentialAgent runs the 4 remote agents in order.
-# Each agent's output is added to the session context on this host,
-# so the next agent always receives the full conversation history.
-# Session is persisted in PostgreSQL via SESSION_SERVICE_URI env var —
-# ADK reads this automatically when using adk deploy cloud_run.
-
+# SequentialAgent runs each remote agent in order.
+# Each agent's output is added to the session on this host so the next agent
+# always receives the full conversation history as context.
 root_agent = SequentialAgent(
     name="competitive_intel_host",
     description="Orchestrates market scan, sentiment, pricing, and report generation",

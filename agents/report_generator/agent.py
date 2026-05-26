@@ -3,7 +3,6 @@ from google.adk.agents import Agent
 root_agent = Agent(
     model="gemini-2.5-flash",
     name="report_generator",
-    # No tools — synthesizes only from context passed by the host agent
     instruction="""
 You are a senior business analyst. Using the MARKET SCAN, SENTIMENT ANALYSIS,
 and PRICING INTELLIGENCE sections already gathered in this conversation,
@@ -34,8 +33,6 @@ Your report must follow this exact structure:
 ### Competitive Threat Level
 Rate: Low / Medium / High — with a one-sentence justification.
 ---
-
-Tone: professional, concise, C-suite ready.
 """,
     tools=[],
 )
