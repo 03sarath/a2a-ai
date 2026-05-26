@@ -33,6 +33,11 @@ export PATH="$HOME/.local/bin:$PATH"
 ADK="$HOME/.local/bin/adk"
 GCLOUD=$(which gcloud)
 
+# ADK deploy reads these env vars internally
+export GOOGLE_CLOUD_PROJECT="$GCP_PROJECT"
+export GOOGLE_CLOUD_LOCATION="$GCP_REGION"
+export GOOGLE_GENAI_USE_VERTEXAI="FALSE"
+
 # ── Step 3: Store API key in Secret Manager ───────────────────────────────────
 echo "[3/7] Storing API key in Secret Manager..."
 echo "$GOOGLE_API_KEY" | $GCLOUD secrets create GOOGLE_API_KEY \
