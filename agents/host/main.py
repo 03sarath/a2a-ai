@@ -2,13 +2,12 @@ import os
 import uvicorn
 from google.adk.cli.fast_api import get_fast_api_app
 
-# get_fast_api_app exposes /run and /run_sse endpoints.
-# SESSION_SERVICE_URI points to Neon PostgreSQL — sessions persist across
-# container restarts and multiple Cloud Run instances.
+# agents_dir must point to the directory CONTAINING the agent module folder.
+# Here /app contains /app/host/__init__.py + /app/host/agent.py
+# SESSION_SERVICE_URI → Neon PostgreSQL for persistent sessions across instances.
 app = get_fast_api_app(
     agents_dir=os.path.dirname(os.path.abspath(__file__)),
     session_service_uri=os.environ.get("SESSION_SERVICE_URI"),
-    allow_origins=["*"],
 )
 
 if __name__ == "__main__":
