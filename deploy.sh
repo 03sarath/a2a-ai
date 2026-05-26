@@ -62,9 +62,9 @@ deploy_specialist() {
   $ADK deploy cloud_run \
     --project="$GCP_PROJECT" \
     --region="$GCP_REGION" \
-    --service-name="$SERVICE" \
-    --allow-unauthenticated \
-    "$AGENT_PATH"
+    --service_name="$SERVICE" \
+    "$AGENT_PATH" \
+    -- --allow-unauthenticated
 
   $GCLOUD run services update "$SERVICE" \
     --region="$GCP_REGION" \
@@ -92,9 +92,9 @@ echo "[6/7] Deploying host agent..."
 $ADK deploy cloud_run \
   --project="$GCP_PROJECT" \
   --region="$GCP_REGION" \
-  --service-name="competitive-intel-host" \
-  --allow-unauthenticated \
-  ./agents/host
+  --service_name="competitive-intel-host" \
+  ./agents/host \
+  -- --allow-unauthenticated
 
 $GCLOUD run services update competitive-intel-host \
   --region="$GCP_REGION" \
