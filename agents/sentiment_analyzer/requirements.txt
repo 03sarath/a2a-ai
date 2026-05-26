@@ -1,0 +1,3 @@
+google-adk==1.9.0
+google-genai
+a2a-sdk==0.3.0

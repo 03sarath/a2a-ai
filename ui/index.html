@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Competitive Intelligence Platform</title>
+
+  <!-- Markdown renderer + HTML sanitizer -->
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/dompurify@3/dist/purify.min.js"></script>
+
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: #0a0e1a;
+      color: #e2e8f0;
+      min-height: 100vh;
+    }
+
+    /* ── Header ── */
+    header {
+      background: linear-gradient(135deg, #1a1f3a 0%, #0f1628 100%);
+      border-bottom: 1px solid #2d3748;
+      padding: 20px 40px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    header .logo {
+      width: 44px;
+      height: 44px;
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+    }
+
+    header h1 {
+      font-size: 1.4rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, #a78bfa, #60a5fa);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    header p {
+      font-size: 0.8rem;
+      color: #64748b;
+      margin-top: 2px;
+    }
+
+    /* ── Layout ── */
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 40px 20px;
+    }
+
+    /* ── Config card ── */
+    .config-card {
+      background: #111827;
+      border: 1px solid #1e293b;
+      border-radius: 16px;
+      padding: 24px;
+      margin-bottom: 28px;
+    }
+
+    .config-card label {
+      display: block;
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: #94a3b8;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 8px;
+    }
+
+    .config-card input {
+      width: 100%;
+      background: #0f172a;
+      border: 1px solid #334155;
+      border-radius: 10px;
+      padding: 12px 16px;
+      color: #e2e8f0;
+      font-size: 0.9rem;
+      font-family: 'Courier New', monospace;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .config-card input:focus { border-color: #6366f1; }
+
+    /* ── Query section ── */
+    .query-section {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 28px;
+    }
+
+    .query-section input {
+      flex: 1;
+      background: #111827;
+      border: 1px solid #1e293b;
+      border-radius: 12px;
+      padding: 14px 20px;
+      color: #e2e8f0;
+      font-size: 1rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .query-section input:focus { border-color: #6366f1; }
+    .query-section input::placeholder { color: #475569; }
+
+    .btn-analyze {
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      padding: 14px 28px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.2s, transform 0.1s;
+      white-space: nowrap;
+    }
+
+    .btn-analyze:hover { opacity: 0.9; transform: translateY(-1px); }
+    .btn-analyze:active { transform: translateY(0); }
+    .btn-analyze:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+    /* ── Pipeline progress ── */
+    .pipeline {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 28px;
+      flex-wrap: wrap;
+    }
+
+    .pipeline-step {
+      flex: 1;
+      min-width: 150px;
+      background: #111827;
+      border: 1px solid #1e293b;
+      border-radius: 10px;
+      padding: 12px 16px;
+      font-size: 0.8rem;
+      color: #475569;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.3s;
+    }
+
+    .pipeline-step .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #1e293b;
+      flex-shrink: 0;
+      transition: background 0.3s;
+    }
+
+    .pipeline-step.active {
+      border-color: #6366f1;
+      color: #a78bfa;
+      background: #1a1035;
+    }
+
+    .pipeline-step.active .dot {
+      background: #6366f1;
+      box-shadow: 0 0 8px #6366f1;
+      animation: pulse 1s infinite;
+    }
+
+    .pipeline-step.done {
+      border-color: #059669;
+      color: #34d399;
+      background: #0a1f15;
+    }
+
+    .pipeline-step.done .dot { background: #059669; }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+
+    /* ── Result card ── */
+    .result-card {
+      background: #111827;
+      border: 1px solid #1e293b;
+      border-radius: 16px;
+      padding: 32px;
+      display: none;
+    }
+
+    .result-card.visible { display: block; }
+
+    .result-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 24px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid #1e293b;
+    }
+
+    .result-header .badge {
+      background: linear-gradient(135deg, #059669, #0d9488);
+      color: white;
+      font-size: 0.72rem;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 20px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .result-header .competitor-name {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #e2e8f0;
+    }
+
+    /* ── Markdown styling ── */
+    .markdown-body { line-height: 1.75; color: #cbd5e1; }
+    .markdown-body h2 {
+      color: #a78bfa;
+      font-size: 1.25rem;
+      margin: 28px 0 12px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid #1e293b;
+    }
+    .markdown-body h3 {
+      color: #60a5fa;
+      font-size: 1rem;
+      margin: 20px 0 8px;
+    }
+    .markdown-body p { margin: 10px 0; }
+    .markdown-body ul, .markdown-body ol {
+      padding-left: 20px;
+      margin: 8px 0;
+    }
+    .markdown-body li { margin: 6px 0; }
+    .markdown-body strong { color: #e2e8f0; }
+    .markdown-body table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 16px 0;
+      font-size: 0.88rem;
+    }
+    .markdown-body th {
+      background: #1e293b;
+      color: #94a3b8;
+      padding: 10px 14px;
+      text-align: left;
+      font-weight: 600;
+    }
+    .markdown-body td {
+      padding: 10px 14px;
+      border-bottom: 1px solid #1e293b;
+      color: #cbd5e1;
+    }
+    .markdown-body tr:hover td { background: #0f172a; }
+    .markdown-body hr {
+      border: none;
+      border-top: 1px solid #1e293b;
+      margin: 24px 0;
+    }
+    .markdown-body code {
+      background: #1e293b;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 0.85em;
+      color: #a78bfa;
+    }
+
+    /* ── Spinner ── */
+    .spinner-wrap {
+      text-align: center;
+      padding: 48px;
+      display: none;
+    }
+
+    .spinner-wrap.visible { display: block; }
+
+    .spinner {
+      width: 48px;
+      height: 48px;
+      border: 3px solid #1e293b;
+      border-top-color: #6366f1;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin: 0 auto 16px;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .spinner-wrap p { color: #64748b; font-size: 0.9rem; }
+
+    /* ── Error ── */
+    .error-box {
+      background: #1a0a0a;
+      border: 1px solid #7f1d1d;
+      border-radius: 12px;
+      padding: 16px 20px;
+      color: #fca5a5;
+      font-size: 0.88rem;
+      display: none;
+      margin-top: 16px;
+    }
+
+    .error-box.visible { display: block; }
+
+    /* ── Agent tag pills in output ── */
+    .agent-tag {
+      display: inline-block;
+      background: #1e293b;
+      color: #94a3b8;
+      font-size: 0.72rem;
+      font-weight: 600;
+      padding: 3px 10px;
+      border-radius: 20px;
+      margin-bottom: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo">🔍</div>
+  <div>
+    <h1>Competitive Intelligence Platform</h1>
+    <p>Multi-Agent A2A System powered by Google ADK + Gemini</p>
+  </div>
+</header>
+
+<div class="container">
+
+  <!-- Config -->
+  <div class="config-card">
+    <label>Host Agent URL</label>
+    <input
+      type="text"
+      id="hostUrl"
+      placeholder="https://competitive-intel-host-xxxx-uc.a.run.app"
+    />
+  </div>
+
+  <!-- Query -->
+  <div class="query-section">
+    <input
+      type="text"
+      id="queryInput"
+      placeholder="e.g. Analyze competitor: OpenAI"
+      onkeydown="if(event.key==='Enter') analyze()"
+    />
+    <button class="btn-analyze" id="analyzeBtn" onclick="analyze()">
+      ⚡ Analyze
+    </button>
+  </div>
+
+  <!-- Pipeline steps -->
+  <div class="pipeline">
+    <div class="pipeline-step" id="step-market">
+      <div class="dot"></div> Market Scanner
+    </div>
+    <div class="pipeline-step" id="step-sentiment">
+      <div class="dot"></div> Sentiment Analyzer
+    </div>
+    <div class="pipeline-step" id="step-pricing">
+      <div class="dot"></div> Pricing Intelligence
+    </div>
+    <div class="pipeline-step" id="step-report">
+      <div class="dot"></div> Report Generator
+    </div>
+  </div>
+
+  <!-- Spinner -->
+  <div class="spinner-wrap" id="spinner">
+    <div class="spinner"></div>
+    <p id="spinnerText">Initializing agents...</p>
+  </div>
+
+  <!-- Error -->
+  <div class="error-box" id="errorBox"></div>
+
+  <!-- Result -->
+  <div class="result-card" id="resultCard">
+    <div class="result-header">
+      <span class="badge">✓ Complete</span>
+      <span class="competitor-name" id="competitorName"></span>
+    </div>
+    <div class="markdown-body" id="reportOutput"></div>
+  </div>
+
+</div>
+
+<script>
+  // Pipeline steps in order — matched to agent names in SSE events
+  const STEPS = [
+    { id: 'step-market',    keywords: ['market_scanner',    'scan_market']    },
+    { id: 'step-sentiment', keywords: ['sentiment_analyzer','analyze_sentiment'] },
+    { id: 'step-pricing',   keywords: ['pricing_intelligence','analyze_pricing'] },
+    { id: 'step-report',    keywords: ['report_generator',  'generate_report'] },
+  ];
+
+  function resetPipeline() {
+    STEPS.forEach(s => {
+      const el = document.getElementById(s.id);
+      el.classList.remove('active', 'done');
+    });
+  }
+
+  function setStepActive(author) {
+    if (!author) return;
+    const lower = author.toLowerCase();
+    STEPS.forEach((s, i) => {
+      const el = document.getElementById(s.id);
+      if (s.keywords.some(k => lower.includes(k))) {
+        // Mark all previous as done
+        STEPS.slice(0, i).forEach(prev =>
+          document.getElementById(prev.id).classList.replace('active','done') ||
+          document.getElementById(prev.id).classList.add('done')
+        );
+        el.classList.remove('done');
+        el.classList.add('active');
+      }
+    });
+  }
+
+  function markAllDone() {
+    STEPS.forEach(s => {
+      const el = document.getElementById(s.id);
+      el.classList.remove('active');
+      el.classList.add('done');
+    });
+  }
+
+  async function analyze() {
+    const hostUrl  = document.getElementById('hostUrl').value.trim().replace(/\/$/, '');
+    const query    = document.getElementById('queryInput').value.trim();
+
+    if (!hostUrl) { showError('Please enter the Host Agent URL.'); return; }
+    if (!query)   { showError('Please enter a competitor to analyze.'); return; }
+    if (query.length > 500) { showError('Query too long. Keep it under 500 characters.'); return; }
+
+    // Extract competitor name for display
+    const match = query.match(/:\s*(.+)$/);
+    const competitor = match ? match[1].trim() : query;
+
+    // Reset UI
+    hideError();
+    resetPipeline();
+    document.getElementById('resultCard').classList.remove('visible');
+    document.getElementById('reportOutput').innerHTML = '';
+    document.getElementById('spinner').classList.add('visible');
+    document.getElementById('spinnerText').textContent = 'Connecting to host agent...';
+    document.getElementById('analyzeBtn').disabled = true;
+
+    const sessionId = 'session_' + Date.now();
+    const userId    = 'ui_user';
+
+    const body = JSON.stringify({
+      app_name:    'competitive_intel_host',
+      user_id:     userId,
+      session_id:  sessionId,
+      new_message: {
+        role:  'user',
+        parts: [{ text: query }],
+      },
+    });
+
+    try {
+      const response = await fetch(`${hostUrl}/run_sse`, {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body,
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      const reader  = response.body.getReader();
+      const decoder = new TextDecoder();
+      let   fullReport = '';
+      let   buffer     = '';
+
+      document.getElementById('spinnerText').textContent = 'Agents working...';
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop(); // keep incomplete line
+
+        for (const line of lines) {
+          if (!line.startsWith('data:')) continue;
+          const raw = line.slice(5).trim();
+          if (!raw || raw === '[DONE]') continue;
+
+          let event;
+          try { event = JSON.parse(raw); } catch { continue; }
+
+          // Update pipeline step based on author
+          if (event.author) {
+            setStepActive(event.author);
+            document.getElementById('spinnerText').textContent =
+              `${event.author} is working...`;
+          }
+
+          // Collect final response text
+          if (event.content?.parts) {
+            for (const part of event.content.parts) {
+              if (part.text) fullReport += part.text;
+            }
+          }
+        }
+      }
+
+      // Render result
+      markAllDone();
+      document.getElementById('spinner').classList.remove('visible');
+      document.getElementById('competitorName').textContent = competitor;
+      // DOMPurify sanitizes the HTML output of marked to prevent XSS
+      document.getElementById('reportOutput').innerHTML =
+        DOMPurify.sanitize(marked.parse(fullReport || '_No report content received._'));
+      document.getElementById('resultCard').classList.add('visible');
+
+    } catch (err) {
+      document.getElementById('spinner').classList.remove('visible');
+      showError(`Error: ${err.message}`);
+    } finally {
+      document.getElementById('analyzeBtn').disabled = false;
+    }
+  }
+
+  function showError(msg) {
+    const box = document.getElementById('errorBox');
+    box.textContent = msg;
+    box.classList.add('visible');
+  }
+
+  function hideError() {
+    document.getElementById('errorBox').classList.remove('visible');
+  }
+</script>
+</body>
+</html>
