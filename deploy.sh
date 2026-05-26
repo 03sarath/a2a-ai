@@ -7,7 +7,7 @@ set -e
 GCP_PROJECT="your-gcp-project-id"       # Your GCP project ID
 GCP_REGION="us-central1"                # Cloud Run region
 GOOGLE_API_KEY="your-gemini-api-key"    # From https://aistudio.google.com/apikey
-DATABASE_URL="postgresql+asyncpg://USER:PASSWORD@HOST/DBNAME?sslmode=require"
+DATABASE_URL="postgresql://USER:PASSWORD@HOST/DBNAME?sslmode=require"
 # =============================================================================
 
 GCLOUD=$(which gcloud)
