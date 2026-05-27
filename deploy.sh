@@ -26,11 +26,18 @@ $GCLOUD services enable \
   storage.googleapis.com \
   --project="$GCP_PROJECT"
 
-# Grant compute service account storage access (required for Cloud Build source upload)
+# Grant compute service account required permissions for Cloud Build + Artifact Registry
 PROJECT_NUMBER=$($GCLOUD projects describe "$GCP_PROJECT" --format="value(projectNumber)")
+SA="serviceAccount:${PROJECT_NUMBER}-compute@developer.gserviceaccount.com"
+
 $GCLOUD projects add-iam-policy-binding "$GCP_PROJECT" \
-  --member="serviceAccount:${PROJECT_NUMBER}-compute@developer.gserviceaccount.com" \
-  --role="roles/storage.objectAdmin"
+  --member="$SA" --role="roles/storage.objectAdmin"
+
+$GCLOUD projects add-iam-policy-binding "$GCP_PROJECT" \
+  --member="$SA" --role="roles/logging.logWriter"
+
+$GCLOUD projects add-iam-policy-binding "$GCP_PROJECT" \
+  --member="$SA" --role="roles/artifactregistry.writer"
 
 # ── Step 2: Store secrets in Secret Manager ──────────────────────────────────
 echo "[2/7] Storing secrets in Secret Manager..."
