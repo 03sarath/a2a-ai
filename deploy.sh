@@ -23,7 +23,14 @@ $GCLOUD services enable \
   run.googleapis.com \
   cloudbuild.googleapis.com \
   secretmanager.googleapis.com \
+  storage.googleapis.com \
   --project="$GCP_PROJECT"
+
+# Grant compute service account storage access (required for Cloud Build source upload)
+PROJECT_NUMBER=$($GCLOUD projects describe "$GCP_PROJECT" --format="value(projectNumber)")
+$GCLOUD projects add-iam-policy-binding "$GCP_PROJECT" \
+  --member="serviceAccount:${PROJECT_NUMBER}-compute@developer.gserviceaccount.com" \
+  --role="roles/storage.objectAdmin"
 
 # ── Step 2: Store secrets in Secret Manager ──────────────────────────────────
 echo "[2/7] Storing secrets in Secret Manager..."
