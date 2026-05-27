@@ -3,7 +3,7 @@ import uvicorn
 from agent import root_agent
 
 from google.adk.runners import Runner
-from google.adk.sessions import InMemorySessionService
+from google.adk.sessions import InMemorySessionService, DatabaseSessionService
 from google.adk.artifacts import InMemoryArtifactService
 from google.adk.memory.in_memory_memory_service import InMemoryMemoryService
 from google.adk.a2a.executor.a2a_agent_executor import A2aAgentExecutor, A2aAgentExecutorConfig
@@ -34,11 +34,14 @@ agent_card = AgentCard(
     ],
 )
 
+_session_uri = os.environ.get("SESSION_SERVICE_URI")
+_session_service = DatabaseSessionService(db_url=_session_uri) if _session_uri else InMemorySessionService()
+
 runner = Runner(
     app_name=root_agent.name,
     agent=root_agent,
     artifact_service=InMemoryArtifactService(),
-    session_service=InMemorySessionService(),
+    session_service=_session_service,
     memory_service=InMemoryMemoryService(),
 )
 
