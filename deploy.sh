@@ -66,7 +66,7 @@ deploy_specialist() {
   local SERVICE=$1
   local AGENT_DIR=$2
 
-  echo "  → Deploying $SERVICE..."
+  echo "  → Deploying $SERVICE..." >&2
   cd "$SCRIPT_DIR/$AGENT_DIR"
 
   $GCLOUD run deploy "$SERVICE" \
@@ -74,8 +74,8 @@ deploy_specialist() {
     --region="$GCP_REGION" \
     --project="$GCP_PROJECT" \
     --allow-unauthenticated \
-    --update-secrets="GOOGLE_API_KEY=GOOGLE_API_KEY:latest" \
-    --set-env-vars="GOOGLE_GENAI_USE_VERTEXAI=FALSE"
+    --update-secrets="GOOGLE_API_KEY=GOOGLE_API_KEY:latest,SESSION_SERVICE_URI=SESSION_SERVICE_URI:latest" \
+    --set-env-vars="GOOGLE_GENAI_USE_VERTEXAI=FALSE" >&2
 
   # Pass the service's own URL back to it (needed for AgentCard)
   local URL
@@ -87,7 +87,7 @@ deploy_specialist() {
   $GCLOUD run services update "$SERVICE" \
     --region="$GCP_REGION" \
     --project="$GCP_PROJECT" \
-    --set-env-vars="GOOGLE_GENAI_USE_VERTEXAI=FALSE,SERVICE_URL=$URL"
+    --set-env-vars="GOOGLE_GENAI_USE_VERTEXAI=FALSE,SERVICE_URL=$URL" >&2
 
   echo "$URL"
 }
