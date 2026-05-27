@@ -10,7 +10,7 @@ from google.adk.a2a.executor.a2a_agent_executor import A2aAgentExecutor, A2aAgen
 from a2a.server.apps import A2AStarletteApplication
 from a2a.server.request_handlers import DefaultRequestHandler
 from a2a.server.tasks import InMemoryTaskStore
-from a2a.types import AgentCard, AgentCapabilities, AgentSkill, TransportProtocol
+from a2a.types import AgentCard, AgentCapabilities, AgentSkill
 
 SERVICE_URL = os.environ.get("SERVICE_URL", "http://localhost:8080")
 
@@ -22,7 +22,6 @@ agent_card = AgentCard(
     capabilities=AgentCapabilities(streaming=True),
     default_input_modes=["text/plain"],
     default_output_modes=["text/plain"],
-    preferred_transport=TransportProtocol.jsonrpc,
     skills=[
         AgentSkill(
             id="analyze_pricing",
