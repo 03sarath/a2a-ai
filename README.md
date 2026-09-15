@@ -25,7 +25,7 @@ User → host-agent (Cloud Run + PostgreSQL session)
    gcloud auth application-default login
    ```
 
-## Student Setup (Only 4 values to change)
+## Student Setup (Only 5 values to change)
 
 Open `deploy.sh` and update the top section:
 
@@ -34,7 +34,12 @@ GCP_PROJECT="your-gcp-project-id"
 GCP_REGION="us-central1"
 GOOGLE_API_KEY="your-gemini-api-key"
 DATABASE_URL="postgresql://user:pass@host/db?sslmode=require"
+GEMINI_MODEL="gemini-2.5-flash"
 ```
+
+`GEMINI_MODEL` is the single place the model is defined. It is injected into every
+agent as an env var, so changing it there and re-running `./deploy.sh` switches all
+four specialist agents at once — no Python file needs editing.
 
 ## Deploy
 

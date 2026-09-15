@@ -8,6 +8,7 @@ GCP_PROJECT="your-gcp-project-id"       # Your GCP project ID
 GCP_REGION="us-central1"                # Cloud Run region
 GOOGLE_API_KEY="your-gemini-api-key"    # From https://aistudio.google.com/apikey
 DATABASE_URL="postgresql://USER:PASSWORD@HOST/DBNAME?sslmode=require"
+GEMINI_MODEL="gemini-2.5-flash"           # Model used by ALL 4 specialist agents
 # =============================================================================
 
 GCLOUD=$(which gcloud)
@@ -82,7 +83,7 @@ deploy_specialist() {
     --project="$GCP_PROJECT" \
     --allow-unauthenticated \
     --update-secrets="GOOGLE_API_KEY=GOOGLE_API_KEY:latest,SESSION_SERVICE_URI=SESSION_SERVICE_URI:latest" \
-    --set-env-vars="GOOGLE_GENAI_USE_VERTEXAI=FALSE" >&2
+    --set-env-vars="GOOGLE_GENAI_USE_VERTEXAI=FALSE,GEMINI_MODEL=$GEMINI_MODEL" >&2
 
   # Pass the service's own URL back to it (needed for AgentCard)
   local URL
@@ -94,7 +95,7 @@ deploy_specialist() {
   $GCLOUD run services update "$SERVICE" \
     --region="$GCP_REGION" \
     --project="$GCP_PROJECT" \
-    --set-env-vars="GOOGLE_GENAI_USE_VERTEXAI=FALSE,SERVICE_URL=$URL" >&2
+    --set-env-vars="GOOGLE_GENAI_USE_VERTEXAI=FALSE,GEMINI_MODEL=$GEMINI_MODEL,SERVICE_URL=$URL" >&2
 
   echo "$URL"
 }
@@ -122,7 +123,7 @@ $GCLOUD run deploy competitive-intel-host \
   --project="$GCP_PROJECT" \
   --allow-unauthenticated \
   --update-secrets="GOOGLE_API_KEY=GOOGLE_API_KEY:latest,SESSION_SERVICE_URI=SESSION_SERVICE_URI:latest" \
-  --set-env-vars="GOOGLE_GENAI_USE_VERTEXAI=FALSE,MARKET_SCANNER_URL=$MARKET_SCANNER_URL,SENTIMENT_ANALYZER_URL=$SENTIMENT_ANALYZER_URL,PRICING_INTEL_URL=$PRICING_INTEL_URL,REPORT_GENERATOR_URL=$REPORT_GENERATOR_URL"
+  --set-env-vars="GOOGLE_GENAI_USE_VERTEXAI=FALSE,GEMINI_MODEL=$GEMINI_MODEL,MARKET_SCANNER_URL=$MARKET_SCANNER_URL,SENTIMENT_ANALYZER_URL=$SENTIMENT_ANALYZER_URL,PRICING_INTEL_URL=$PRICING_INTEL_URL,REPORT_GENERATOR_URL=$REPORT_GENERATOR_URL"
 
 HOST_URL=$($GCLOUD run services describe competitive-intel-host \
   --region="$GCP_REGION" \
@@ -136,5 +137,6 @@ echo "================================================"
 echo " All 5 agents deployed successfully!"
 echo "================================================"
 echo " Host URL : $HOST_URL"
+echo " Model    : $GEMINI_MODEL"
 echo " Open UI  : ui/index.html → paste the Host URL"
 echo "================================================"

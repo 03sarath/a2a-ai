@@ -1,8 +1,14 @@
+import os
+
 from google.adk.agents import Agent
 from google.adk.tools import google_search
 
+# Model is set once in deploy.sh (GEMINI_MODEL) and injected as an env var.
+# The literal below is only a local-development fallback.
+MODEL = os.environ.get("GEMINI_MODEL", "gemini-2.5-flash")
+
 root_agent = Agent(
-    model="gemini-2.5-flash",
+    model=MODEL,
     name="market_scanner",
     instruction="""
 You are a market intelligence specialist. Scan the web for recent developments
